@@ -15,5 +15,6 @@ struct Tablero {
 };
 
 void iniciar_tablero(Tablero& tablero);
+bool mover_ficha(Tablero& tablero, int origen_x, int origen_y, int destino_x, int destino_y);
 
 #endif 
