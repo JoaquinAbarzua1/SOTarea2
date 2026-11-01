@@ -1,22 +1,22 @@
-#include <vector>
+#include "tablero.h"
 using namespace std;
-// Representacion del contenido de cada casilla
-enum EstadoCasilla { VACIA, PUMA, PERRO };
 
-// Estructura de un nodo en el grafo
-struct Casilla {
-    int id;
-    EstadoCasilla estado;
-    vector<int> adyacentes; // ids de las casillas
-    
-    // aqui mas adelante se agregara un mutex para bloquear casilla por casilla
-};
+void iniciar_tablero(Tablero& tablero) {
+    // Inicializar la matriz del tablero con VACIO
+    for (int i = 0; i < 7; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            tablero.matriz[i][j] = VACIO;
+        }
+    }
 
-class Tablero{
-private:
-    vector<Casilla> grafo; // vector de structs de tipo Casilla o nodo
+    // Iniciar el mutex del tablero
+    pthread_mutex_init(&tablero.lock_tablero, NULL);
 
-public:
-
+    // Bloquear casillas del trono para que quede triangular
+    tablero.matriz[0][0] = INVALIDO;
+    tablero.matriz[0][1] = INVALIDO;
+    tablero.matriz[0][3] = INVALIDO;
+    tablero.matriz[0][4] = INVALIDO;
+    tablero.matriz[1][0] = INVALIDO;
+    tablero.matriz[1][4] = INVALIDO;
 }
-
