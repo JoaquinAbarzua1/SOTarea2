@@ -4,6 +4,7 @@
 #include <pthread.h> // cabecera para la programacion con hilos (pthread_create(), pthread_join() y mas cosas)
 #include "tablero.hpp" // se incluye la clase tablero
 
+
 // para pasar múltiples variables al hilo sin usar variables globales (mala practica)
 struct Jugador{
     Tablero* tablero; // puntero a la clase Tablero, como solo puedo pasarle un unico argumento (cosas de los hilos), mejor le paso la clase 
