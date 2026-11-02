@@ -18,18 +18,15 @@ struct Tablero {
     Coordenadas pos_perro[12]; // posiciones de los perros en el tablero
     bool perro_vivo[12]; // para saber si el perro está vivo o no (si es false, el perro fue comido por el puma)
     int perros_capturados; // cantidad de perros capturados por el puma, para saber si el puma ganó (si captura 6 perros, gana)
-
-    // Estado de la partida y aviso de movimientos para validación de Juez
-    bool movimiento_realizado; // para avisar al juez que se realizó un movimiento (para que el juez valide si es correcto o no)
-    bool partida_terminada; // Juez avisa que partida terminó
-    int ganador; // 1. Puma, 2. Perro, 0 nadie (partida activa)
+    bool puma_capturado; 
 
     // Sincronización
     pthread_mutex_t lock_tablero; // Tablero completo es sección crítica (con 12 perros moviéndose al mismo tiempo es dificil asegurarse con un semáforo)
-    pthread_cond_t cond_juez;// Desbloquea al juez cada vez que se realiza un movimiento
+
 };
 
-void iniciar_tablero(Tablero& tablero);
+void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config); // Inicializa el tablero con las posiciones de las fichas según la configuración del torneo
+void imprimir_tablero(const Tablero& tablero); // Para revisar que el tablero se inicializó correctamente con sus coordenadas
 bool mover_ficha(Tablero& tablero, int origen_x, int origen_y, int destino_x, int destino_y);
 
 #endif 

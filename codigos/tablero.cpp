@@ -1,29 +1,36 @@
 #include "tablero.hpp"
-#include "parseo.cpp"
 
 using namespace std;
 
-void iniciar_tablero(Tablero& tablero) {
-    // Inicializar la matriz del tablero con VACIO
+void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config) {
+    // Inicializar la matriz del tablero con VACIO o INVALIDO según corresponda
     for (int i = 0; i < 7; ++i) {
         for (int j = 0; j < 5; ++j) { 
             if(coordenada_valida(i,j)==true){
             tablero.matriz[i][j] = VACIO;
-        }else{tablero.matriz[i][j] = INVALIDO;} 
+            } else { tablero.matriz[i][j] = INVALIDO; } 
         }
     }
 
+    // Colocar PUMA en su posición inicial
+    tablero.pos_puma = config.puma;
+    tablero.matriz[tablero.pos_puma.y][tablero.pos_puma.x] = PUMA; // Marcar casilla con PUMA
+    tablero.puma_capturado = false; 
+
+    // Colocar a los 12 PERROS en sus posiciones iniciales
+    for (int i = 0; i < 12; ++i) {
+        tablero.pos_perro[i] = config.perro[i];
+        tablero.matriz[config.perro[i].y][config.perro[i].x] = PERRO; // Marcar casilla con PERRO
+        tablero.perro_vivo[i] = true;
+    }
+
+    tablero.perros_capturados = 0;
+
+
+
+
     // Iniciar el mutex del tablero
     pthread_mutex_init(&tablero.lock_tablero, NULL);
-
-    // Bloquear casillas del trono para que quede triangular
-    tablero.matriz[0][0] = INVALIDO;
-    tablero.matriz[0][1] = INVALIDO;
-    tablero.matriz[0][3] = INVALIDO;
-    tablero.matriz[0][4] = INVALIDO;
-    tablero.matriz[1][0] = INVALIDO;
-    tablero.matriz[1][2] = INVALIDO;
-    tablero.matriz[1][4] = INVALIDO;
 }
 
 bool mover_ficha(Tablero& tablero, int origen_x, int origen_y, int destino_x, int destino_y) {
