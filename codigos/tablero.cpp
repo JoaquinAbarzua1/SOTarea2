@@ -1,11 +1,15 @@
-#include "tablero.h"
+#include "tablero.hpp"
+#include "parseo.cpp"
+
 using namespace std;
 
 void iniciar_tablero(Tablero& tablero) {
     // Inicializar la matriz del tablero con VACIO
     for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < 5; ++j) {
+        for (int j = 0; j < 5; ++j) { 
+            if(coordenada_valida(i,j)==true){
             tablero.matriz[i][j] = VACIO;
+        }else{tablero.matriz[i][j] = INVALIDO;} 
         }
     }
 
@@ -18,37 +22,38 @@ void iniciar_tablero(Tablero& tablero) {
     tablero.matriz[0][3] = INVALIDO;
     tablero.matriz[0][4] = INVALIDO;
     tablero.matriz[1][0] = INVALIDO;
+    tablero.matriz[1][2] = INVALIDO;
     tablero.matriz[1][4] = INVALIDO;
 }
 
 bool mover_ficha(Tablero& tablero, int origen_x, int origen_y, int destino_x, int destino_y) {
-    // 1. Solicitar acceso exclusivo a la Sección Crítica
+    // Solicitar acceso exclusivo a la sección crítica
     pthread_mutex_lock(&tablero.lock_tablero);
 
-    // 2. Validar que el destino esté dentro de los límites de la matriz 7x5
+    // Validar que el destino esté dentro de los límites de la matriz 7x5
     if (destino_x < 0 || destino_x > 4 || destino_y < 0 || destino_y > 6) {
         pthread_mutex_unlock(&tablero.lock_tablero);
         return false;
     }
 
-    // 3. Validar que el destino no sea una esquina fantasma del trono
+    // Validar que el destino no sea una esquina fantasma del trono
     if (tablero.matriz[destino_y][destino_x] == INVALIDO) {
         pthread_mutex_unlock(&tablero.lock_tablero);
         return false;
     }
 
-    // 4. Validar que la casilla de destino esté realmente libre
+    // Validar que la casilla de destino esté realmente libre
     if (tablero.matriz[destino_y][destino_x] != VACIO) {
         pthread_mutex_unlock(&tablero.lock_tablero);
         return false;
     }
 
-    // 5. Si todo es válido, ejecutar el movimiento
+    // Si todo es válido, ejecutar el movimiento
     int ficha = tablero.matriz[origen_y][origen_x];
     tablero.matriz[origen_y][origen_x] = VACIO;
     tablero.matriz[destino_y][destino_x] = ficha;
 
-    // 6. Liberar el candado para que otros hilos puedan evaluar sus movimientos
+    // Liberar el candado para que otros hilos puedan evaluar sus movimientos
     pthread_mutex_unlock(&tablero.lock_tablero);
     
     return true;
