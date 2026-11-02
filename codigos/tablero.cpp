@@ -1,5 +1,5 @@
 #include "tablero.hpp"
-
+#include <iostream>
 using namespace std;
 
 void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config) {
@@ -31,6 +31,25 @@ void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config) {
 
     // Iniciar el mutex del tablero
     pthread_mutex_init(&tablero.lock_tablero, NULL);
+}
+
+void imprimir_tablero(const Tablero& tablero) {
+    cout << " Estado inicial de Tablero/s:" << endl;
+    for (int i = 0; i < 7; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            int casilla = tablero.matriz[i][j];
+            if (casilla == INVALIDO) {
+                cout << "   "; 
+            } else if (casilla == VACIO) {
+                cout << " . "; // Nodo libre
+            } else if (casilla == PUMA) {
+                cout << " P "; // Puma
+            } else if (casilla == PERRO) {
+                cout << " D "; // Perro (Doggo)
+            }
+        }
+        cout << "\n";
+    }
 }
 
 bool mover_ficha(Tablero& tablero, int origen_x, int origen_y, int destino_x, int destino_y) {
