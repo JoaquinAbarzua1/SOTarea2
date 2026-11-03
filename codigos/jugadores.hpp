@@ -21,5 +21,7 @@ struct Jugador{
 void* rutina_perro(void* arg); // la rutina del hilo solo puede recibir un unico parametro (el puntero generico void)
 void* rutina_puma(void* arg);
 
+void iniciar_jugadores(Tablero& tablero, const ConfigTorneo& config, int id_partida, pthread_t& hebra_puma, pthread_t hebras_perro[12], Jugador& datos_puma, Jugador datos_perros[12]); 
+
 
 #endif
