@@ -31,7 +31,7 @@ bool mover_perro(Tablero& tablero, int id_perro, unsigned int& semilla) { // REV
 
         tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva
 
-        tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva
+        tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva // TRIplicado por live share? wtf etonce
 
         tablero.pos_perro[id_perro] = destino; // Actualizar struct Coordenadas del Doggo
 
