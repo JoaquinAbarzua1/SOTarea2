@@ -15,7 +15,7 @@ struct ConfigTorneo {
     int delay_min;
     int delay_max;
     Coordenadas puma;
-    bool p_inicial_puma; // Si se entrega posición inicial del puma en el archivo de configuración
+    bool p_inicial_puma; // Si se entrega posición inicial del puma en el archivo de configuración 
     Coordenadas perro[12];
     int num_perros; // Si se entregan posiciones iniciales de los perros en el archivo de configuración, cuántos son (podrían faltar)
 };

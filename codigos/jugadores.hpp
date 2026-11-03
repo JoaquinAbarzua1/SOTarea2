@@ -8,7 +8,7 @@
 // para pasar múltiples variables al hilo sin usar variables globales (mala practica)
 struct Jugador{
     Tablero* tablero; // puntero a la clase Tablero, como solo puedo pasarle un unico argumento (cosas de los hilos), mejor le paso la clase 
-    int id_pieza;
+    int id_pieza; // 12 Puma, 0-11 Perros
     int tipo;
 
     int id_partida; // id de la mesa/partida

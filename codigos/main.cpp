@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "parseo.hpp"
+#include "tablero.hpp"
 
 using namespace std;
 
@@ -60,6 +61,10 @@ int main(int argc, char *argv[]) {
         cout << "ERROR: Configuración inválida\n";
         return 1;
     }
+
+    Tablero tablero;
+    iniciar_tablero(tablero, config);
+    imprimir_tablero(tablero);
 
     return 0;
 }

@@ -2,6 +2,7 @@
 #define TABLERO_HPP
 
 #include <pthread.h>
+#include <vector>
 #include "parseo.hpp" // para usar la funcion coordenada_valida y la estructura ConfigTorneo (para usar la seed, coordenadas, delay, etc)
 using namespace std;
 
@@ -27,6 +28,6 @@ struct Tablero {
 
 void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config); // Inicializa el tablero con las posiciones de las fichas según la configuración del torneo
 void imprimir_tablero(const Tablero& tablero); // Para revisar que el tablero se inicializó correctamente con sus coordenadas
-bool mover_ficha(Tablero& tablero, int origen_x, int origen_y, int destino_x, int destino_y);
+const vector<Coordenadas>& obtener_vecinos(int y, int x); // Retorna las casillas adyacentes a (y, x)
 
 #endif 
