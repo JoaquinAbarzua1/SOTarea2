@@ -28,13 +28,7 @@ bool mover_perro(Tablero& tablero, int id_perro, unsigned int& semilla) { // REV
         
         tablero.matriz[origen_y][origen_x] = VACIO; // Limpiar casilla actual
         tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva
-
-        tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva
-
-        tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva // TRIplicado por live share? wtf etonce
-
         tablero.pos_perro[id_perro] = destino; // Actualizar struct Coordenadas del Doggo
-
         pthread_mutex_unlock(&tablero.lock_tablero);
         return true;
     }

@@ -14,11 +14,13 @@ void calcular_salto(Coordenadas origen, Coordenadas destino, Coordenadas& adyace
     // Calcular la posición de la casilla adyacente en la misma dirección
     adyacente.y = destino.y - diff_y;
     adyacente.x = destino.x - diff_x;
+
+    // PENDIENTE: hacer caso exclusivo para trono
 }
 
 
 
-bool mover_puma(Tablero& tablero, int id_puma, unsigned int& semilla) {
+bool mover_puma(Tablero& tablero,int id_pieza, unsigned int& semilla) {
     int origen_y = tablero.pos_puma.y;
     int origen_x = tablero.pos_puma.x;
 
@@ -42,9 +44,6 @@ bool mover_puma(Tablero& tablero, int id_puma, unsigned int& semilla) {
         
         tablero.matriz[origen_y][origen_x] = VACIO; // Limpiar casilla actual
         tablero.matriz[destino.y][destino.x] = PUMA; // Ocupar casilla nueva
-
-        tablero.matriz[destino.y][destino.x] = PUMA; // Ocupar casilla nueva
-
         tablero.pos_puma = destino; // Actualizar struct Coordenadas del cat poruqe pos_puma es un struct Coordenadas
 
         pthread_mutex_unlock(&tablero.lock_tablero);
@@ -55,7 +54,7 @@ bool mover_puma(Tablero& tablero, int id_puma, unsigned int& semilla) {
         // -REVISAR si la/s casilla/s adyacente a tablero.matriz[destino.y][destino.x] == PERRO tambien esta vacia para poder atacar
         verificar = obtener_vecinos(destino.y, destino.x); // obtengo la primera casilla adyacente a la casilla destino (donde esta el perro)
 
-        if (verificar == VACIA){ // hay una sola casilla adyacente valida para salto, pero se debe encontrar, el como se hace lo vemo despue
+        if (true){ // true cambiar por verificar == VACIA, hay una sola casilla adyacente valida para salto, pero se debe encontrar, el como se hace lo vemo despue
         // lo importante es que como sabemos que esta vacia, se puede atacar al perro y saltar a la casilla adyacente
             calcular_salto(tablero.pos_puma, destino, verificar[0]); // calculo la casilla adyacente a la casilla destino (donde esta el perro) para saltar a ella
             tablero.matriz[origen_y][origen_x] = VACIO; // Limpiar casilla actual
@@ -73,7 +72,7 @@ bool mover_puma(Tablero& tablero, int id_puma, unsigned int& semilla) {
             }
 
             tablero.matriz[verificar[0].y][verificar[0].x] = PUMA; // Ocupar casilla nueva (la casilla adyacente a la casilla destino donde estaba el perro)
-            tablero.pos_puma = verificar[0]; // Actualizar la posicion del puma joder
+            tablero.pos_puma = verificar[0]; // Actualizar la posicion del puma joder 
             pthread_mutex_unlock(&tablero.lock_tablero);
             return true; // True, se movió al puma, se le avisa al juez
         }else{
