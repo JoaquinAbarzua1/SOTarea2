@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include "parseo.hpp"
 #include "tablero.hpp"
+#include <vector>
+#include <semaphore.h>>
+#include "mesa.hpp"
 
 using namespace std;
 
@@ -65,6 +68,8 @@ int main(int argc, char *argv[]) {
     Tablero tablero;
     iniciar_tablero(tablero, config);
     imprimir_tablero(tablero);
+
+    
 
     return 0;
 }

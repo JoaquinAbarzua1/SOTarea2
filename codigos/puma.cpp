@@ -37,11 +37,11 @@ void* rutina_puma(void* arg){
 
     while (jugador_puma->tablero->partida_activa && !jugador_puma->tablero->puma_capturado)
     {
-     int rango = jugador_puma->delay_max - jugador_puma->delay_min + 1;
-     int retardo = jugador_puma->delay_min + (rand_r((unsigned int*)&jugador_puma->seed) % rango);
-     usleep(retardo*1000);
+        int rango = jugador_puma->delay_max - jugador_puma->delay_min + 1;
+        int retardo = jugador_puma->delay_min + (rand_r((unsigned int*)&jugador_puma->seed) % rango);
+        usleep(retardo*1000);
         // rand retardo aleatorio entre 50ms y 300ms (o delays especificados en config.txt)
-    mover_puma(*jugador_puma->tablero, jugador_puma->id_pieza, (unsigned int&)jugador_puma->seed);
+        mover_puma(*jugador_puma->tablero, jugador_puma->id_pieza, (unsigned int&)jugador_puma->seed);
     }
     return NULL;
 }
