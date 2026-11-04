@@ -4,6 +4,7 @@
 #include <stdlib.h> // para usar rand()
 using namespace std;
 #include "jugadores.hpp"
+#include "mesa.hpp"
 
 
 bool mover_perro(Tablero& tablero, int id_perro, unsigned int& semilla) { // REVISAR id_perro YA QUE NO ESTA DEFINIDO
@@ -18,29 +19,22 @@ bool mover_perro(Tablero& tablero, int id_perro, unsigned int& semilla) { // REV
     int tamaño = vecinos.size();
     int indice = rand_r(&semilla) % tamaño; // la semilla del perro 
 
-    pthread_mutex_lock(&tablero.lock_tablero); // luego de obtener el indice, se bloque el tablero o sea le ponemo candadito
-
-    // Guardamos las coordenadas de destino
+    // Guardamos las coordenadas de destino que el perro intenta jugar
     Coordenadas destino = vecinos[indice];
 
-    // Revisar que no esté ocupada
-    if (tablero.matriz[destino.y][destino.x] == VACIO) {
-        
-        tablero.matriz[origen_y][origen_x] = VACIO; // Limpiar casilla actual
-        tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva
-        tablero.pos_perro[id_perro] = destino; // Actualizar struct Coordenadas del Doggo
-        pthread_mutex_unlock(&tablero.lock_tablero);
-        return true;
-    }
+    pthread_mutex_lock(&tablero.lock_tablero); // luego de obtener el indice, se bloque el tablero o sea le ponemo candadito
 
-    pthread_mutex_unlock(&tablero.lock_tablero); // La casilla no estaba vacía, no se mueve (para evitar dejar tablero bloqueado y seguir buscando)
-    return false; // False, no se movió al perro, no se le avisa al juez  
+    // El juez revisa y valida si el perro puede moverse a la casilla destino
+    bool se_movio = validar_movimiento_perro(tablero, id_perro, destino);
+
+    pthread_mutex_unlock(&tablero.lock_tablero); // Se desbloquea el tablero (para evitar dejar tablero bloqueado y seguir buscando)
+    return se_movio;
 }
 
 void* rutina_perro(void* arg){
     Jugador* jugador_perro = (Jugador*)arg;
 
-    while(true) // true == estado_partida que probablemente sea un parametro de mesa.cpp
+    while(jugador_perro->tablero->partida_activa && jugador_perro->tablero->perro_vivo[jugador_perro->id_pieza])
     {
      int rango = jugador_perro->delay_max - jugador_perro->delay_min + 1;
      int retardo = jugador_perro->delay_min + (rand_r((unsigned int*)&jugador_perro->seed) % rango);

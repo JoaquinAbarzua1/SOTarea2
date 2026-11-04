@@ -59,14 +59,22 @@ bool parseo(const string& nombreArchivo, ConfigTorneo& config) {
         // Mientras haya palabras en la línea, leerlas
         while (ss >> parametro) {
             if (parametro == "SEED") {
+                if (config.seed != -1) {
+                    cout << "ERROR: Parámetro SEED repetido\n";
+                    return false;
+                }
                 // Intentar guardar el siguiente valor en config.seed (si no es un número, retorna error)
-                if (!(ss >> config.seed)) {
+                if (!(ss >> config.seed) || config.seed < 0) {
                     cout << "ERROR: Valor de SEED no válido\n";
                     return false;
                 }
             }
 
             else if (parametro == "DELAY_MIN") {
+                if (config.delay_min != -1) {
+                    cout << "ERROR: Parámetro DELAY_MIN repetido\n";
+                    return false;
+                }
                 if (!(ss >> config.delay_min) || config.delay_min < 0) {
                     cout << "ERROR: Valor de DELAY_MIN no válido\n";
                     return false;
@@ -74,13 +82,17 @@ bool parseo(const string& nombreArchivo, ConfigTorneo& config) {
             }
 
             else if (parametro == "DELAY_MAX") {
+                if (config.delay_max != -1) {
+                    cout << "ERROR: Parámetro DELAY_MAX repetido\n";
+                    return false;
+                }
                 if (!(ss >> config.delay_max) || config.delay_max < 0) {
                     cout << "ERROR: Valor de DELAY_MAX no válido\n";
                     return false;
                 }
             }
 
-            else if (parametro == "PUMA") {
+            else if (parametro == "PUMA_INIT") {
                 int y, x;
                 if (config.p_inicial_puma) { 
                     cout << "ERROR: PUMA repetido\n"; 
@@ -100,9 +112,17 @@ bool parseo(const string& nombreArchivo, ConfigTorneo& config) {
                 config.p_inicial_puma = true;
             }
 
-            else if (parametro == "PERRO") {
+            else if (parametro == "DOG_INIT") {
+                if (config.num_perros > 0) {
+                    cout << "ERROR: Parámetro DOG_INIT repetido\n";
+                    return false;
+                }
                 int y, x; // Reviso todas las coordenadas entregadas
-                while (config.num_perros < 12 && ss >> y >> x ) {
+                while (config.num_perros < 12) {
+                    if (!(ss >> y >> x)) {
+                        cout << "ERROR: Faltan coordenadas (se deben entregar exactamente 12 pares de coordenadas para DOG_INIT)\n";
+                        return false;
+                    }
                     if (coordenada_valida(y, x) && !casilla_ocupada(y, x, config)) {
                         config.perro[config.num_perros].x = x;
                         config.perro[config.num_perros].y = y;

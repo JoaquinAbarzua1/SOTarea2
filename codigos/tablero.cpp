@@ -96,8 +96,8 @@ void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config) {
 
     tablero.perros_capturados = 0;
 
-
-
+    // Se inicia la partida (mientras sea true)
+    tablero.partida_activa = true;
 
     // Iniciar el mutex del tablero
     pthread_mutex_init(&tablero.lock_tablero, NULL);
@@ -120,4 +120,25 @@ void imprimir_tablero(const Tablero& tablero) {
         }
         cout << "\n";
     }
+}
+// Imprimir matriz del tablero en archivo de logs
+void guardar_tablero_log(Tablero& tablero) {
+    if (!tablero.archivo_log.is_open()) return;
+
+    for (int i = 0; i < 7; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            int casilla = tablero.matriz[i][j];
+            if (casilla == INVALIDO) {
+                tablero.archivo_log << "   "; 
+            } else if (casilla == VACIO) {
+                tablero.archivo_log << " . "; // Casilla vacía
+            } else if (casilla == PUMA) {
+                tablero.archivo_log << " P "; // Puma
+            } else if (casilla == PERRO) {
+                tablero.archivo_log << " D "; // Perro (Doggo)
+            }
+        }
+        tablero.archivo_log << "\n";
+    }
+    tablero.archivo_log << "\n";
 }

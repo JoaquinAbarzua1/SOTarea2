@@ -1,13 +1,21 @@
 #ifndef MESA_HPP
 #define MESA_HPP
 
-struct tablero
+#include <semaphore.h> 
+#include "tablero.hpp"
+#include "parseo.hpp"
+
+struct Mesa
 {
-    
+    int id_partida;
+    ConfigTorneo config;
+    sem_t* max_mesas;
 };
 
-void condiciones_victoria(){
-    // si el contador de perros capturados o el arreglo de perros[i] es false para todos los indices, entonces el puma gana
-}
+bool puede_saltar(const Tablero& tablero, int origen_y, int origen_x, Coordenadas destino, Coordenadas& aterrizaje);
+bool validar_movimiento_perro(Tablero& tablero, int id_perro, Coordenadas destino);
+bool validar_movimiento_puma(Tablero& tablero, Coordenadas destino);
+bool condiciones_victoria(Tablero& tablero, int id_partida);
+void* rutina_mesa(void* arg);
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <vector>
+#include <fstream> 
 #include "parseo.hpp" // para usar la funcion coordenada_valida y la estructura ConfigTorneo (para usar la seed, coordenadas, delay, etc)
 using namespace std;
 
@@ -24,10 +25,15 @@ struct Tablero {
     // Sincronización
     pthread_mutex_t lock_tablero; // Tablero completo es sección crítica (con 12 perros moviéndose al mismo tiempo es dificil asegurarse con un semáforo)
 
+    bool partida_activa; // Juez controla estado de la partida
+    int id_partida; // Identificador de la partida para el registro de eventos
+    ofstream archivo_log; // Archivo de log individual de la partida
+
 };
 
 void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config); // Inicializa el tablero con las posiciones de las fichas según la configuración del torneo
 void imprimir_tablero(const Tablero& tablero); // Para revisar que el tablero se inicializó correctamente con sus coordenadas
+void guardar_tablero_log(Tablero& tablero); // Guarda el estado actual (imprime matriz con las posiciones) del tablero en el archivo .log de la partida
 const vector<Coordenadas>& obtener_vecinos(int y, int x); // Retorna las casillas adyacentes a (y, x)
 
 #endif 
