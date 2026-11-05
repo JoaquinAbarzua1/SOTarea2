@@ -24,11 +24,29 @@ bool mover_puma(Tablero& tablero,int id_pieza, unsigned int& semilla) {
 
     pthread_mutex_lock(&tablero.lock_tablero); // luego de obtener el indice, se bloque el tablero o sea le ponemo candadito
 
-    // El juez revisa y valida si el puma puede moverse o capturar en la casilla destino
-    bool se_movio = validar_movimiento_puma(tablero, destino);
+    // Si el juez le preguntó al puma si sigue activo, responde cambiando el bool a false
+    if (!tablero.puma_capturado && tablero.verificar_conexion[12]) {
+        tablero.verificar_conexion[12] = false;
+    }
+
+    if (!tablero.partida_activa || tablero.puma_capturado || tablero.peticion_pendiente[12]) {
+        pthread_mutex_unlock(&tablero.lock_tablero);
+        return false;
+    }   
+
+    tablero.peticion_pendiente[12] = true; // Marca que el puma ya tiene petición pendiente en la cola
+
+// gatito le pide permiso a dios para moverse
+    Peticion peticion_nueva;
+    peticion_nueva.tipo = PUMA;
+    peticion_nueva.id_pieza = 12;
+    peticion_nueva.origen = {origen_y, origen_x};
+    peticion_nueva.destino = destino;
+
+    tablero.cola_peticiones.push_back(peticion_nueva); // se mete esta nueva peticion en el vector de peticiones
 
     pthread_mutex_unlock(&tablero.lock_tablero);
-    return se_movio;
+    return true;
 }
 
 

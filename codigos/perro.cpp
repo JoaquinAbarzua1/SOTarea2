@@ -24,11 +24,30 @@ bool mover_perro(Tablero& tablero, int id_perro, unsigned int& semilla) { // REV
 
     pthread_mutex_lock(&tablero.lock_tablero); // luego de obtener el indice, se bloque el tablero o sea le ponemo candadito
 
-    // El juez revisa y valida si el perro puede moverse a la casilla destino
-    bool se_movio = validar_movimiento_perro(tablero, id_perro, destino);
+    // Si el perro sigue vivo y el juez le preguntó si sigue activo, responde cambiando el bool a false
+    if (tablero.perro_vivo[id_perro] && tablero.verificar_conexion[id_perro]) {
+        tablero.verificar_conexion[id_perro] = false;
+    }
 
-    pthread_mutex_unlock(&tablero.lock_tablero); // Se desbloquea el tablero (para evitar dejar tablero bloqueado y seguir buscando)
-    return se_movio;
+    if (!tablero.partida_activa || !tablero.perro_vivo[id_perro] || tablero.peticion_pendiente[id_perro]) {
+        pthread_mutex_unlock(&tablero.lock_tablero);
+        return false;
+    }
+
+    tablero.peticion_pendiente[id_perro] = true; // Marca que este perro ya tiene petición pendiente en la cola
+    
+// doggis se comunica con dios y le pide permiso para moverse
+    Peticion peticion_nueva;
+    peticion_nueva.tipo = PERRO;
+    peticion_nueva.id_pieza = id_perro;
+    peticion_nueva.origen = {origen_y, origen_x};
+    peticion_nueva.destino = destino;
+
+    tablero.cola_peticiones.push_back(peticion_nueva); // se mete esta nueva peticion en el vector de peticiones
+
+    pthread_mutex_unlock(&tablero.lock_tablero);
+    return true;
+
 }
 
 void* rutina_perro(void* arg){

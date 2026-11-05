@@ -96,6 +96,12 @@ void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config) {
 
     tablero.perros_capturados = 0;
 
+    // Inicializar que ninguna ficha tiene peticiones pendientes al inicio
+    for (int i = 0; i < 13; ++i) {
+        tablero.peticion_pendiente[i] = false;
+        tablero.verificar_conexion[i] = true; // Primera consulta del juez al iniciar la partida
+    }
+
     // Se inicia la partida (mientras sea true)
     tablero.partida_activa = true;
 

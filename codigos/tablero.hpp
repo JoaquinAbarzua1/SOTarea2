@@ -12,6 +12,14 @@ using namespace std;
 #define PUMA 1
 #define PERRO 2
 
+// Struct define petición de movimiento que le hacen las fichas al juez
+struct Peticion {
+    int tipo; // Puma o Perro
+    int id_pieza; // 0 a 11 Perro, 12 Puma
+    Coordenadas origen;
+    Coordenadas destino; // Casilla a la que se quiere mover
+};
+
 struct Tablero {
     int matriz[7][5];
 
@@ -28,6 +36,9 @@ struct Tablero {
     bool partida_activa; // Juez controla estado de la partida
     int id_partida; // Identificador de la partida para el registro de eventos
     ofstream archivo_log; // Archivo de log individual de la partida
+    vector<Peticion> cola_peticiones; // cola de las peticiones que el juez deb validar
+    bool peticion_pendiente[13]; // 0 a 11 perros, 12 puma: indica si la ficha ya tiene una petición esperando en la cola
+    bool verificar_conexion[13]; // 0 a 11 perros, 12 puma: juez lo pone en true y ficha viva responde con false
 
 };
 

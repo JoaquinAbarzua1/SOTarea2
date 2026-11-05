@@ -22,7 +22,7 @@ bool puede_saltar (const Tablero& tablero, int origen_y, int origen_x, Coordenad
     
     const vector<Coordenadas> vecinos_perro = obtener_vecinos(destino.y, destino.x);
     bool es_vecino_valido = false;
-    for (int i = 0; i < vecinos_perro.size(); i++) {
+    for (int i = 0; i < (int)vecinos_perro.size(); i++) {
         if (vecinos_perro[i].y == aterrizaje.y && vecinos_perro[i].x == aterrizaje.x) {
             es_vecino_valido = true;
             break;
@@ -47,7 +47,7 @@ bool validar_movimiento_perro(Tablero& tablero, int id_perro, Coordenadas destin
         tablero.matriz[destino.y][destino.x] = PERRO; // Ocupar casilla nueva
         tablero.pos_perro[id_perro] = destino; // Actualizar struct Coordenadas del Doggo
         // Mostrar movimiento por consola y registrar en logs
-        cout << "[Partida " << tablero.id_partida << "] Perro " << id_perro << " se mueve de ]" << origen_y << ", " << origen_x << "] a [" << destino.y << ", " << destino.x << "]\n";
+        cout << "[Partida " << tablero.id_partida << "] Perro " << id_perro << " se mueve de [" << origen_y << ", " << origen_x << "] a [" << destino.y << ", " << destino.x << "]\n";
         tablero.archivo_log << "[Partida " << tablero.id_partida << "] Perro " << id_perro << " se mueve de [" << origen_y << ", " << origen_x << "] a [" << destino.y << ", " << destino.x << "]\n";
         guardar_tablero_log(tablero);
 
@@ -117,7 +117,7 @@ bool validar_movimiento_puma(Tablero& tablero, Coordenadas destino) {
     const vector<Coordenadas> vecinos = obtener_vecinos(origen_y, origen_x);
     bool escape = false;
     // El juez revisa las casillas adyacentes al puma
-    for (int k = 0; k < vecinos.size(); k++) {
+    for (int k = 0; k < (int)vecinos.size(); k++) {
         Coordenadas destino_escape = vecinos[k];
         Coordenadas aterrizaje_escape; // Para enviarle a "puede_saltar" 
 
@@ -153,6 +153,34 @@ bool condiciones_victoria(Tablero& tablero, int id_partida){
     return false; // Nadie ha ganado, partida sigue activa
 }
 
+bool verificar_jugadores_activos(Tablero& tablero, int id_partida) {
+    // Revisar si el CATTO respondió (si sigue en true, no respondió y abandonó)
+    if (tablero.verificar_conexion[12]) {
+        tablero.partida_activa = false;
+        cout << "[Partida " << id_partida << "] ABANDONO: Puma le dió la pera y dejó de responder. Victoria de Perros por abandono\n";
+        tablero.archivo_log << "[Partida " << id_partida << "] ABANDONO: Puma le dió a pera y dejó de responder. Victoria de Perros por abandono\n";
+        return true;
+    }
+    // Si respondió (estaba en false), el juez vuelve a dejarlo en true para la próxima consulta
+    tablero.verificar_conexion[12] = true;
+
+    // Revisar solo a los perros watones que siguen vivos
+    for (int i = 0; i < 12; i++) {
+        if (tablero.perro_vivo[i]) {
+            if (tablero.verificar_conexion[i]) {
+                tablero.partida_activa = false;
+                cout << "[Partida " << id_partida << "] ABANDONO: Perro " << i << " se le hizo y dejó de responder. Victoria del Puma por abandono\n";
+                tablero.archivo_log << "[Partida " << id_partida << "] ABANDONO: Perro " << i << " se le hizo dejó de responder. Victoria del Puma por abandono\n";
+                return true;
+            }
+            // Si respondió (estaba en false), el juez vuelve a dejarlo en true para la próxima consulta
+            tablero.verificar_conexion[i] = true;
+        }
+    }
+
+    return false; // Todos los hilos vivos siguen respondiendo
+}
+
 void* rutina_mesa(void* arg) {
     Mesa* mesa = (Mesa*)arg;
 
@@ -177,15 +205,48 @@ void* rutina_mesa(void* arg) {
 
     iniciar_jugadores(tablero, mesa->config, mesa->id_partida, hebra_puma, hebras_perros, datos_puma, datos_perros);
 
-    while (true) {
-        usleep(250 * 1000); // pregunta cada 250 mseconds
-        
-        pthread_mutex_lock(&tablero.lock_tablero); // bloquea el tablero para imprimir estado del tablero
+    int crono_ms = 0;
+    int tiempo_limite = mesa->config.delay_max * 2 + 100; // Margen para que todas las fichas vivas alcancen a despertar y responder
 
-        // Revisa si alguien ha ganado
-        if (condiciones_victoria(tablero, mesa->id_partida)) {
+    while (true) {
+        usleep(1 * 1000); // pregunta cada 1 ms para atender rápido la cola
+        crono_ms++;
+        
+        pthread_mutex_lock(&tablero.lock_tablero); // bloquea el tablero para procesar peticiones
+
+        // El juez procesa todas las peticiones de movimiento que llegaron a la cola
+        for (int i = 0; i < (int)tablero.cola_peticiones.size(); i++) {
+
+            Peticion p = tablero.cola_peticiones[i];
+            if (p.tipo == PERRO) {
+
+                validar_movimiento_perro(tablero, p.id_pieza, p.destino);
+
+            } else if (p.tipo == PUMA) {
+                validar_movimiento_puma(tablero, p.destino);
+            }
+
+            tablero.peticion_pendiente[p.id_pieza] = false;
+
+            if (condiciones_victoria(tablero, mesa->id_partida)) {
+                break;
+            }
+        }
+
+        // Limpiar la cola después de atender las peticiones
+        tablero.cola_peticiones.clear();
+
+        // Si aún nadie ha ganado y se cumplió el tiempo del cronómetro, el juez verifica que nadie haya abandonado
+        if (tablero.partida_activa && crono_ms >= tiempo_limite) {
+            crono_ms = 0;
+            verificar_jugadores_activos(tablero, mesa->id_partida);
+        }
+
+        // Revisa si alguien ha ganado o si la partida terminó por abandono
+        if (!tablero.partida_activa) {
+
             pthread_mutex_unlock(&tablero.lock_tablero);
-            break; // Si alguien gana, termino la partido (sale el hilo del ciclo while)
+            break; // Si alguien gana, termino la partida (sale el hilo del ciclo while)
         }
 
         pthread_mutex_unlock(&tablero.lock_tablero); // Desbloquea tablero para que el juego continúe
