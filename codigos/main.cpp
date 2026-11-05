@@ -6,7 +6,7 @@
 #include "parseo.hpp"
 #include "tablero.hpp"
 #include <vector>
-#include <semaphore.h>>
+#include <semaphore.h>
 #include "mesa.hpp"
 
 using namespace std;
@@ -65,11 +65,31 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    Tablero tablero;
-    iniciar_tablero(tablero, config);
-    imprimir_tablero(tablero);
+    int total_partidas = N / 2; // 2 jugadores por mesa, entonces necesito N/2 para atenderlos a todos
 
+    sem_t max_mesas;
+    sem_init(&max_mesas, 0, M); // Se inicia semafoto en M (mesas disponibles)
+
+    vector <pthread_t> hebras_mesas(total_partidas); 
+    vector <Mesa> datos_mesas(total_partidas);
+
+    for (int i = 0; i < total_partidas; i++) {
+        sem_wait(&max_mesas); // limite de M mesas concurrentes
+
+        datos_mesas[i].id_partida = i + 1;
+        datos_mesas[i].config = config;
+        datos_mesas[i].max_mesas = &max_mesas;
+
+        pthread_create(&hebras_mesas[i], NULL, rutina_mesa, (void*)&datos_mesas[i]);
+
+        }
+
+    for (int i = 0; i < total_partidas; i++) {
+        pthread_join(hebras_mesas[i], NULL);
+    }
+
+
+    sem_destroy(&max_mesas);
     
-
     return 0;
 }

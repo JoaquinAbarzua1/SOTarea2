@@ -73,7 +73,7 @@ bool validar_movimiento_puma(Tablero& tablero, Coordenadas destino) {
         tablero.pos_puma = destino; // Actualizar struct Coordenadas del cat poruqe pos_puma es un struct Coordenadas
 
         // Lo mismo (mostrar por consola y registrar en logs)
-        cout << "[Partida " << tablero.id_partida << "] Puma se mueve de []" << origen_y << ", " << origen_x << "] a []" << destino.y << ", " << destino.x << "]\n";
+        cout << "[Partida " << tablero.id_partida << "] Puma se mueve de [" << origen_y << ", " << origen_x << "] a [" << destino.y << ", " << destino.x << "]\n";
         tablero.archivo_log << "[Partida " << tablero.id_partida << "] Puma se mueve de [" << origen_y << ", " << origen_x << "] a [" << destino.y << ", " << destino.x << "]\n";
         guardar_tablero_log(tablero);
 
