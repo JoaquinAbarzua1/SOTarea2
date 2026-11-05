@@ -135,7 +135,7 @@ bool validar_movimiento_puma(Tablero& tablero, Coordenadas destino) {
 
 bool condiciones_victoria(Tablero& tablero, int id_partida){
     
-    // Puma se come a 6 perros
+    // el gato waton se come unos 6 perros calientes
     if (tablero.perros_capturados >= 6) {
         tablero.partida_activa = false;
         cout << "[Partida " << id_partida << "] finaliza con victoria del Puma con " << tablero.perros_capturados << " perros capturados\n";
@@ -263,10 +263,12 @@ void* rutina_mesa(void* arg) {
 
     pthread_mutex_destroy(&tablero.lock_tablero);
     pthread_cond_destroy(&tablero.cond_juez);
-    sem_post(mesa->max_mesas);
 
     cout << "[Partida " << mesa->id_partida << "] terminó, mesa liberada\n";
     tablero.archivo_log << "[Partida " << mesa->id_partida << "] terminó, mesa liberada\n";
     tablero.archivo_log.close();
+
+    mesa->mesa_libre = true; // Avisa que esta mesa física quedó desocupada
+    sem_post(mesa->max_mesas);
     return NULL;
 }

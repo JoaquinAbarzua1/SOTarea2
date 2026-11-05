@@ -73,21 +73,44 @@ int main(int argc, char *argv[]) {
     vector <pthread_t> hebras_mesas(M); 
     vector <Mesa> datos_mesas(M);
 
+    // Al inicio las M mesas están libres y ninguna ha sido usada todavía
+    for (int k = 0; k < M; k++) {
+        datos_mesas[k].mesa_libre = true;
+        datos_mesas[k].usada_antes = false;
+    }
+
     for (int i = 0; i < total_partidas; i++) {
         sem_wait(&max_mesas); // limite de M mesas concurrentes
 
-        datos_mesas[i].id_partida = i + 1;
-        datos_mesas[i].config = config;
-        datos_mesas[i].max_mesas = &max_mesas;
-
-        pthread_create(&hebras_mesas[i], NULL, rutina_mesa, (void*)&datos_mesas[i]);
-
+        // Buscar cuál de las M mesas está libre
+        int k = 0;
+        for (int j = 0; j < M; j++) {
+            if (datos_mesas[j].mesa_libre) {
+                k = j;
+                break;
+            }
         }
 
-    for (int i = 0; i < total_partidas; i++) {
-        pthread_join(hebras_mesas[i], NULL);
+        // Si ya habían jugado antes en esta mesa k, limpiamos el hilo anterior
+        if (datos_mesas[k].usada_antes) {
+            pthread_join(hebras_mesas[k], NULL);
+        }
+
+        datos_mesas[k].id_partida = i + 1;
+        datos_mesas[k].config = config;
+        datos_mesas[k].max_mesas = &max_mesas;
+        datos_mesas[k].mesa_libre = false;
+        datos_mesas[k].usada_antes = true;
+
+        pthread_create(&hebras_mesas[k], NULL, rutina_mesa, (void*)&datos_mesas[k]);
     }
 
+    // Esperar a las últimas mesas que queden jugando al final
+    for (int k = 0; k < M; k++) {
+        if (datos_mesas[k].usada_antes) {
+            pthread_join(hebras_mesas[k], NULL);
+        }
+    }
 
     sem_destroy(&max_mesas);
     

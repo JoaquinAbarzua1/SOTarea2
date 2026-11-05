@@ -10,6 +10,8 @@ struct Mesa
     int id_partida;
     ConfigTorneo config;
     sem_t* max_mesas;
+    bool mesa_libre;  // true si la mesa está desocupada
+    bool usada_antes; // true si ya corrió un hilo en esta mesa y hay que hacerle join
 };
 
 bool puede_saltar(const Tablero& tablero, int origen_y, int origen_x, Coordenadas destino, Coordenadas& aterrizaje);
