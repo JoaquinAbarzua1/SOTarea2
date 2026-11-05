@@ -57,7 +57,7 @@ bool parseo(const string& nombreArchivo, ConfigTorneo& config) {
         string parametro; // Variable para guardar cada palabra
 
         // Mientras haya palabras en la línea, leerlas
-        while (ss >> parametro) { // Autoexplicativo
+        while (ss >> parametro) {
             if (parametro == "SEED") {
                 if (config.seed != -1) {
                     cout << "ERROR: Parámetro SEED repetido\n";
@@ -69,7 +69,7 @@ bool parseo(const string& nombreArchivo, ConfigTorneo& config) {
                     return false;
                 }
             }
-// se autoexplica solo a el mismo
+
             else if (parametro == "DELAY_MIN") {
                 if (config.delay_min != -1) {
                     cout << "ERROR: Parámetro DELAY_MIN repetido\n";
@@ -91,7 +91,7 @@ bool parseo(const string& nombreArchivo, ConfigTorneo& config) {
                     return false;
                 }
             }
-// codigo atoexplicativo
+
             else if (parametro == "PUMA_INIT") {
                 int y, x;
                 if (config.p_inicial_puma) { 
@@ -111,7 +111,7 @@ bool parseo(const string& nombreArchivo, ConfigTorneo& config) {
                 config.puma.y = y; config.puma.x = x;
                 config.p_inicial_puma = true;
             }
-// puro else if
+
             else if (parametro == "DOG_INIT") {
                 if (config.num_perros > 0) {
                     cout << "ERROR: Parámetro DOG_INIT repetido\n";

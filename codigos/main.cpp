@@ -1,5 +1,4 @@
 #include <iostream>
-#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -7,11 +6,23 @@
 #include "tablero.hpp"
 #include <vector>
 #include <semaphore.h>
+#include <signal.h>
 #include "mesa.hpp"
 
 using namespace std;
 
+bool torneo_abortado = false;
+
+void apendicitis(int sig) {
+    (void)sig;
+    cout << "\n***\n***\n LABORTO EXTREME: Le da apendicitis al torneo, se le lleva a clínica Alemana para tratamiento rutinario de la comuna de Las Condes\n***\n***\n";
+    torneo_abortado = true;
+}
+
 int main(int argc, char *argv[]) {
+
+    signal(SIGINT, apendicitis);
+
     if (argc < 3 || argc > 4) {
         cout << "ERROR: Número incorrecto de argumentos\n";
         cout << "Formato esperado: ./torneo N M ó ./torneo N M config.txt\n";
@@ -38,6 +49,12 @@ int main(int argc, char *argv[]) {
     // Validar que M sea positivo
     if (M <= 0) {
         cout << "ERROR: M debe ser un número positivo\n";
+        return 1;
+    }
+
+    // Validar que M no supere la cantidad total de partidas (N / 2)
+    if (M > N / 2) {
+        cout << "ERROR: M no puede ser mayor a N / 2 (no deben de haber más mesas que posibles partidas (no puedo tener 10 mesas activas para atender a sólo 2 jugadores)\n";
         return 1;
     }
 
@@ -70,47 +87,34 @@ int main(int argc, char *argv[]) {
     sem_t max_mesas;
     sem_init(&max_mesas, 0, M); // Se inicia semafoto en M (mesas disponibles)
 
-    vector <pthread_t> hebras_mesas(M); 
-    vector <Mesa> datos_mesas(M);
+    vector <pthread_t> hebras_mesas(total_partidas); 
+    vector <Mesa> datos_mesas(total_partidas);
 
-    // Al inicio las M mesas están libres y ninguna ha sido usada todavía
-    for (int k = 0; k < M; k++) {
-        datos_mesas[k].mesa_libre = true;
-        datos_mesas[k].usada_antes = false;
-    }
+    int partidas_creadas = 0;
 
     for (int i = 0; i < total_partidas; i++) {
+        if (torneo_abortado) {
+            break;
+        }
+
         sem_wait(&max_mesas); // limite de M mesas concurrentes
 
-        // Buscar cuál de las M mesas está libre
-        int k = 0;
-        for (int j = 0; j < M; j++) {
-            if (datos_mesas[j].mesa_libre) {
-                k = j;
-                break;
-            }
+        if (torneo_abortado) {
+            break;
         }
 
-        // Si ya habían jugado antes en esta mesa k, limpiamos el hilo anterior
-        if (datos_mesas[k].usada_antes) {
-            pthread_join(hebras_mesas[k], NULL);
-        }
+        datos_mesas[i].id_partida = i + 1;
+        datos_mesas[i].config = config;
+        datos_mesas[i].max_mesas = &max_mesas;
 
-        datos_mesas[k].id_partida = i + 1;
-        datos_mesas[k].config = config;
-        datos_mesas[k].max_mesas = &max_mesas;
-        datos_mesas[k].mesa_libre = false;
-        datos_mesas[k].usada_antes = true;
-
-        pthread_create(&hebras_mesas[k], NULL, rutina_mesa, (void*)&datos_mesas[k]);
+        pthread_create(&hebras_mesas[i], NULL, rutina_mesa, (void*)&datos_mesas[i]);
+        partidas_creadas++;
     }
 
-    // Esperar a las últimas mesas que queden jugando al final
-    for (int k = 0; k < M; k++) {
-        if (datos_mesas[k].usada_antes) {
-            pthread_join(hebras_mesas[k], NULL);
-        }
+    for (int i = 0; i < partidas_creadas; i++) {
+        pthread_join(hebras_mesas[i], NULL);
     }
+
 
     sem_destroy(&max_mesas);
     

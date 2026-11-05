@@ -135,7 +135,7 @@ bool validar_movimiento_puma(Tablero& tablero, Coordenadas destino) {
 
 bool condiciones_victoria(Tablero& tablero, int id_partida){
     
-    // el gato waton se come unos 6 perros calientes
+    // Puma se come a 6 perros
     if (tablero.perros_capturados >= 6) {
         tablero.partida_activa = false;
         cout << "[Partida " << id_partida << "] finaliza con victoria del Puma con " << tablero.perros_capturados << " perros capturados\n";
@@ -205,14 +205,21 @@ void* rutina_mesa(void* arg) {
 
     iniciar_jugadores(tablero, mesa->config, mesa->id_partida, hebra_puma, hebras_perros, datos_puma, datos_perros);
 
-    int peticiones_procesadas = 0;
+    int crono_ms = 0;
+    int tiempo_limite = mesa->config.delay_max * 2 + 100; // Margen para que todas las fichas vivas alcancen a despertar y responder
 
     while (true) {
+        usleep(1 * 1000); // pregunta cada 1 ms para atender rápido la cola
+        crono_ms++;
+        
         pthread_mutex_lock(&tablero.lock_tablero); // bloquea el tablero para procesar peticiones
 
-        // Si la cola está vacía y la partida sigue activa, el juez duerme sin gastar CPU hasta que llegue una petición
-        while (tablero.cola_peticiones.empty() && tablero.partida_activa) {
-            pthread_cond_wait(&tablero.cond_juez, &tablero.lock_tablero);
+        if (torneo_abortado) {
+            tablero.partida_activa = false;
+            cout << "[Partida " << mesa->id_partida << "] Abortada por señal SIGINT (Ctrl+C)\n";
+            tablero.archivo_log << "[Partida " << mesa->id_partida << "] Abortada por señal SIGINT (Ctrl+C)\n";
+            pthread_mutex_unlock(&tablero.lock_tablero);
+            break;
         }
 
         // El juez procesa todas las peticiones de movimiento que llegaron a la cola
@@ -228,7 +235,6 @@ void* rutina_mesa(void* arg) {
             }
 
             tablero.peticion_pendiente[p.id_pieza] = false;
-            peticiones_procesadas++;
 
             if (condiciones_victoria(tablero, mesa->id_partida)) {
                 break;
@@ -238,9 +244,9 @@ void* rutina_mesa(void* arg) {
         // Limpiar la cola después de atender las peticiones
         tablero.cola_peticiones.clear();
 
-        // Cada 100 peticiones atendidas, el juez verifica que nadie haya abandonado
-        if (tablero.partida_activa && peticiones_procesadas >= 100) {
-            peticiones_procesadas = 0;
+        // Si aún nadie ha ganado y se cumplió el tiempo del cronómetro, el juez verifica que nadie haya abandonado
+        if (tablero.partida_activa && crono_ms >= tiempo_limite) {
+            crono_ms = 0;
             verificar_jugadores_activos(tablero, mesa->id_partida);
         }
 
@@ -262,13 +268,10 @@ void* rutina_mesa(void* arg) {
     } 
 
     pthread_mutex_destroy(&tablero.lock_tablero);
-    pthread_cond_destroy(&tablero.cond_juez);
+    sem_post(mesa->max_mesas);
 
     cout << "[Partida " << mesa->id_partida << "] terminó, mesa liberada\n";
     tablero.archivo_log << "[Partida " << mesa->id_partida << "] terminó, mesa liberada\n";
     tablero.archivo_log.close();
-
-    mesa->mesa_libre = true; // Avisa que esta mesa física quedó desocupada
-    sem_post(mesa->max_mesas);
     return NULL;
 }

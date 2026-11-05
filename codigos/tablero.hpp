@@ -32,7 +32,6 @@ struct Tablero {
 
     // Sincronización
     pthread_mutex_t lock_tablero; // Tablero completo es sección crítica (con 12 perros moviéndose al mismo tiempo es dificil asegurarse con un semáforo)
-    pthread_cond_t cond_juez; // Variable de condición para despertar al juez solo cuando llega una petición
 
     bool partida_activa; // Juez controla estado de la partida
     int id_partida; // Identificador de la partida para el registro de eventos
