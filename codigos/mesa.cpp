@@ -205,14 +205,15 @@ void* rutina_mesa(void* arg) {
 
     iniciar_jugadores(tablero, mesa->config, mesa->id_partida, hebra_puma, hebras_perros, datos_puma, datos_perros);
 
-    int crono_ms = 0;
-    int tiempo_limite = mesa->config.delay_max * 2 + 100; // Margen para que todas las fichas vivas alcancen a despertar y responder
+    int peticiones_procesadas = 0;
 
     while (true) {
-        usleep(1 * 1000); // pregunta cada 1 ms para atender rápido la cola
-        crono_ms++;
-        
         pthread_mutex_lock(&tablero.lock_tablero); // bloquea el tablero para procesar peticiones
+
+        // Si la cola está vacía y la partida sigue activa, el juez duerme sin gastar CPU hasta que llegue una petición
+        while (tablero.cola_peticiones.empty() && tablero.partida_activa) {
+            pthread_cond_wait(&tablero.cond_juez, &tablero.lock_tablero);
+        }
 
         // El juez procesa todas las peticiones de movimiento que llegaron a la cola
         for (int i = 0; i < (int)tablero.cola_peticiones.size(); i++) {
@@ -227,6 +228,7 @@ void* rutina_mesa(void* arg) {
             }
 
             tablero.peticion_pendiente[p.id_pieza] = false;
+            peticiones_procesadas++;
 
             if (condiciones_victoria(tablero, mesa->id_partida)) {
                 break;
@@ -236,9 +238,9 @@ void* rutina_mesa(void* arg) {
         // Limpiar la cola después de atender las peticiones
         tablero.cola_peticiones.clear();
 
-        // Si aún nadie ha ganado y se cumplió el tiempo del cronómetro, el juez verifica que nadie haya abandonado
-        if (tablero.partida_activa && crono_ms >= tiempo_limite) {
-            crono_ms = 0;
+        // Cada 100 peticiones atendidas, el juez verifica que nadie haya abandonado
+        if (tablero.partida_activa && peticiones_procesadas >= 100) {
+            peticiones_procesadas = 0;
             verificar_jugadores_activos(tablero, mesa->id_partida);
         }
 
@@ -260,6 +262,7 @@ void* rutina_mesa(void* arg) {
     } 
 
     pthread_mutex_destroy(&tablero.lock_tablero);
+    pthread_cond_destroy(&tablero.cond_juez);
     sem_post(mesa->max_mesas);
 
     cout << "[Partida " << mesa->id_partida << "] terminó, mesa liberada\n";

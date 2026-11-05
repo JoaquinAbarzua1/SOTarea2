@@ -70,8 +70,8 @@ int main(int argc, char *argv[]) {
     sem_t max_mesas;
     sem_init(&max_mesas, 0, M); // Se inicia semafoto en M (mesas disponibles)
 
-    vector <pthread_t> hebras_mesas(total_partidas); 
-    vector <Mesa> datos_mesas(total_partidas);
+    vector <pthread_t> hebras_mesas(M); 
+    vector <Mesa> datos_mesas(M);
 
     for (int i = 0; i < total_partidas; i++) {
         sem_wait(&max_mesas); // limite de M mesas concurrentes

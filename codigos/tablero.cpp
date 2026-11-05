@@ -105,8 +105,9 @@ void iniciar_tablero(Tablero& tablero, const ConfigTorneo& config) {
     // Se inicia la partida (mientras sea true)
     tablero.partida_activa = true;
 
-    // Iniciar el mutex del tablero
+    // Iniciar el mutex y la variable de condición del tablero
     pthread_mutex_init(&tablero.lock_tablero, NULL);
+    pthread_cond_init(&tablero.cond_juez, NULL);
 }
 
 void imprimir_tablero(const Tablero& tablero) {

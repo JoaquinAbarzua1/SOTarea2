@@ -44,6 +44,7 @@ bool mover_perro(Tablero& tablero, int id_perro, unsigned int& semilla) { // REV
     peticion_nueva.destino = destino;
 
     tablero.cola_peticiones.push_back(peticion_nueva); // se mete esta nueva peticion en el vector de peticiones
+    pthread_cond_signal(&tablero.cond_juez); // le avisa al juez que llegó una petición para que despierte
 
     pthread_mutex_unlock(&tablero.lock_tablero);
     return true;
